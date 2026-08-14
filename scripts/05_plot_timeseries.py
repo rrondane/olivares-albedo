@@ -27,7 +27,7 @@ import figstyle
 figstyle.use()
 
 # Okabe-Ito
-BLUE, ORANGE, BLACK, GRAY = "#0072B2", "#E69F00", "#000000", "#BBBBBB"
+BLUE, ORANGE, BLACK, GRAY = "#0072B2", "#E69F00", "#000000", "#A5A5A5"
 FIRE_COLORS = {2017: ORANGE, 2023: BLUE}
 
 MIN_DAYS_FOR_MEAN = 10  # DJF days required to accept a summer mean
