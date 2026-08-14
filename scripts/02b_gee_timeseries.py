@@ -109,12 +109,15 @@ def main():
     init_ee(args.project)
     REDUCER = build_reducer()
     geom = glacier_geometry()
-    # count glacier pixels on the MODIS grid itself (the raw band has no
-    # masked pixels, so this is the total pixel count of the region)
-    raw = (ee.ImageCollection("MODIS/061/MOD10A1").first()
-           .select("Snow_Albedo_Daily_Tile"))
-    n_pixels = int(raw.reduceRegion(
-        ee.Reducer.count(), geom, 500).get("Snow_Albedo_Daily_Tile").getInfo())
+    # total-pixel denominator: reduce an all-ones image on the MODIS grid
+    # with the SAME combined reducer as the daily statistics, so boundary
+    # pixels are counted identically (a standalone count() weights edge
+    # pixels fractionally and would come out ~40% lower)
+    proj = (ee.ImageCollection("MODIS/061/MOD10A1").first()
+            .select("Snow_Albedo_Daily_Tile").projection())
+    n_pixels = int(ee.Image.constant(1).setDefaultProjection(proj)
+                   .rename("alb").reduceRegion(REDUCER, geom, 500)
+                   .getInfo()["alb_count"])
     print(f"{n_pixels} MODIS pixels on the glaciers")
 
     y0, y1 = config.YEAR_RANGE
