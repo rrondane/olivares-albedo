@@ -12,3 +12,4 @@ dependencies:
   - xarray
   - netcdf4
   - matplotlib
+  - earthengine-api   # only needed for the Google Earth Engine route (02b/06b)

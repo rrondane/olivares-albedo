@@ -65,6 +65,30 @@ end: "2017" means November 2016 - March 2017.
    machine urs.earthdata.nasa.gov login YOUR_USER password YOUR_PASSWORD
    ```
 
+### Route B: Google Earth Engine (alternative to scripts 02-04)
+
+Both products are also in the [Earth Engine
+catalog](https://developers.google.com/earth-engine/datasets), and the
+glacier averages can be computed entirely on Google's servers — no queue,
+no bulk download, only the final table is transferred. Use this route if
+AppEEARS is slow or down.
+
+1. Register for (free) noncommercial Earth Engine use and create a Google
+   Cloud project: <https://code.earthengine.google.com/register>
+2. `earthengine authenticate` (one time; opens the browser)
+3. ```bash
+   python scripts/01_download_outlines.py                      # if not done yet
+   python scripts/02b_gee_timeseries.py --project YOUR-PROJECT # ~10-20 min
+   python scripts/05_plot_timeseries.py
+   python scripts/06b_gee_albedo_map.py 2017-01-30 --project YOUR-PROJECT
+   ```
+
+Script 02b writes the **same CSV** as script 04, so everything downstream
+is identical. Small differences to be aware of: Earth Engine resamples in
+its own pyramid/projection when reducing, so pixel counts and means can
+differ by a few percent from the AppEEARS numbers — fine for the
+hypothesis test, but do not mix the two sources within one analysis.
+
 ## What you get
 
 - `data/processed/albedo_timeseries.csv` — one row per day and variable
@@ -109,6 +133,7 @@ end: "2017" means November 2016 - March 2017.
 
 ```
 scripts/   numbered workflow (01 → 06) + config.py + figstyle.py
+           02b/06b are the Google Earth Engine alternatives to 02-04/06
 data/      everything downloaded/derived (git-ignored, ~hundreds of MB)
 figures/   output figures (git-ignored)
 ```
