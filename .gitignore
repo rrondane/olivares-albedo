@@ -1,0 +1,12 @@
+# downloaded and derived data (hundreds of MB; everyone regenerates their own)
+data/*
+!data/README.md
+figures/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+
+# macOS
+.DS_Store

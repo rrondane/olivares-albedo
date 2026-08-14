@@ -1,0 +1,9 @@
+requests
+numpy
+pandas
+geopandas>=0.14
+shapely>=2.0
+pyogrio
+xarray
+netCDF4
+matplotlib

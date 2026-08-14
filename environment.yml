@@ -1,0 +1,14 @@
+name: olivares-albedo
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - requests
+  - numpy
+  - pandas
+  - geopandas>=0.14
+  - shapely>=2.0
+  - pyogrio
+  - xarray
+  - netcdf4
+  - matplotlib
