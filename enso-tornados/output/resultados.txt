@@ -55,4 +55,26 @@ Data
     core 15 May-15 Jun: El Nino 7/17 vs rest 9/34   Fisher p = 0.345
     core May-Aug: El Nino 14/17 vs rest 26/34   Fisher p = 0.731
 
+=== events + 2026 provisional (ENSO provisional): n=79  (El Nino 31, neutral 38, La Nina 10)
+    El Nino  n= 31  mean date 08-jul  R=0.783  Rayleigh p=0.0000
+    rest     n= 48  mean date 09-jun  R=0.616  Rayleigh p=0.0000
+    all      n= 79  mean date 22-jun  R=0.661  Rayleigh p=0.0000
+    d(mean date) El Nino - rest = +28.8 days   perm p = 0.013
+    d(concentration R)          = +0.167        perm p = 0.145
+    Watson U2                   = 0.101         perm p = 0.288
+    Spearman rho(ONI anom, |dev from mean date|) = +0.020   perm p = 0.858
+    core 15 May-15 Jun: El Nino 12/31 vs rest 14/48   Fisher p = 0.464
+    core May-Aug: El Nino 27/31 vs rest 37/48   Fisher p = 0.381
+
+=== tornado days + 2026 provisional: n=60  (El Nino 21, neutral 30, La Nina 9)
+    El Nino  n= 21  mean date 09-jul  R=0.810  Rayleigh p=0.0000
+    rest     n= 39  mean date 05-jun  R=0.590  Rayleigh p=0.0000
+    all      n= 60  mean date 19-jun  R=0.638  Rayleigh p=0.0000
+    d(mean date) El Nino - rest = +34.5 days   perm p = 0.017
+    d(concentration R)          = +0.220        perm p = 0.106
+    Watson U2                   = 0.113         perm p = 0.219
+    Spearman rho(ONI anom, |dev from mean date|) = -0.076   perm p = 0.567
+    core 15 May-15 Jun: El Nino 7/21 vs rest 11/39   Fisher p = 0.771
+    core May-Aug: El Nino 18/21 vs rest 29/39   Fisher p = 0.512
+
 Base rate check: 26.1% of months 1950-2023 are El Nino episodes -> expected 18.8 of 72 events, observed 24 (exact binomial two-sided p = 0.179). Events are not independent (outbreaks), so this p is anti-conservative; it concerns frequency, not seasonality.

@@ -39,6 +39,21 @@ Correcciones menores aplicadas al leer la base: coordenadas con coma
 decimal, y el evento 65 (Lago Villarrica 2021) trae la longitud en la
 columna de latitud; se usa la latitud del lago para el filtro espacial.
 
+### Eventos provisionales de 2026
+
+`data/eventos_2026_provisional.csv` recoge los eventos de 2026
+reportados en prensa que aún no están curados en la base (temporadas de
+julio y agosto: Lago Llanquihue 24-jul; Chillán Viejo y Bulnes 27-jul,
+F1 preliminar DMC; Larque Oriente 8-ago; y el episodio del 27-29 de
+agosto: trombas de Constitución y Tomé y el tornado de Yungay-Cholguán).
+**Esta lista es un borrador para curatoría** — editar ese CSV (agregar,
+quitar, corregir fechas/coordenadas) y volver a correr el script. Como
+el ONI de JAS 2026 aún no se publica, estos eventos usan la última
+anomalía disponible (AMJ 2026: +0.98 °C) y una fase por umbral ±0.5 °C
+solamente ("El Niño provisional": la regla de episodio de ≥5 trimestres
+no puede aplicarse a un evento en curso). El análisis los trata como
+variante aparte y nunca los mezcla con el resultado principal.
+
 ## Resultados (instantánea 2024 de la base; `output/resultados.txt`)
 
 - **La estacionalidad es fuerte en todas las fases** (Rayleigh
@@ -59,15 +74,38 @@ columna de latitud; se usa la latitud del lago para el filtro espacial.
   (binomial exacto p ≈ 0.18, y anticonservador porque los brotes no son
   independientes).
 
-**Conclusión:** con los 72 eventos fechados de la era ONI, la
-estacionalidad de los tornados chilenos es robusta a la fase de ENSO;
-hay una sugerencia (no significativa) de que El Niño corre la temporada
-unas 2-4 semanas hacia el invierno tardío y aporta los eventos de
-septiembre. Con ~17-24 eventos cálidos el poder estadístico es bajo:
-detectar un corrimiento de un mes con estos tamaños requiere más o
-menos el doble de eventos, así que vale la pena repetir el test cuando
-la base crezca (o extenderlo antes de 1950 con índices ENSO
-reconstruidos).
+**Conclusión (base curada hasta 2023):** con los 72 eventos fechados de
+la era ONI, la estacionalidad de los tornados chilenos es robusta a la
+fase de ENSO; hay una sugerencia (no significativa) de que El Niño
+corre la temporada unas 2-4 semanas hacia el invierno tardío y aporta
+los eventos de septiembre. Con ~17-24 eventos cálidos el poder
+estadístico es bajo.
+
+### Actualización con los eventos provisionales de 2026
+
+La temporada 2026 (evento cálido en desarrollo: ONI MAM +0.51,
+AMJ +0.98 °C) ha producido eventos concentrados en julio y agosto,
+es decir exactamente en la cola tardía donde la base 1950-2023 ya
+insinuaba el efecto de El Niño. Agregando los 7 eventos provisionales:
+
+- d(fecha media) El Niño - resto = **+29 días (perm p = 0.013)** con
+  eventos, **+35 días (p = 0.017)** con días de tornado: la fecha media
+  bajo El Niño pasa a ~8-9 de julio contra ~5-9 de junio en el resto.
+- La concentración sigue algo mayor bajo El Niño (ΔR +0.17-0.22,
+  p ≈ 0.11-0.15); Watson U² p ≈ 0.22-0.29.
+
+Es decir, **con 2026 incluido el corrimiento tardío de la temporada
+bajo ENSO cálido se vuelve estadísticamente significativo al 5 %** en
+la métrica de fecha media. Cautelas: (1) los eventos 2026 son
+provisionales (sin curatoría de la base ni clasificación ONI de
+episodio definitiva); (2) 2026 está incompleto — aunque el sesgo de
+truncación va en contra del resultado, no a favor, porque solo faltan
+meses aún más tardíos; (3) la densidad de reportes moderna infla los
+años recientes en ambos grupos por igual, pero un solo año aporta 7 de
+los 31 eventos cálidos, así que el resultado descansa fuerte en 2026:
+conviene re-testear cuando el ONI de JAS-OND 2026 esté publicado y los
+eventos curados. Si más eventos ocurren en septiembre (como en 2018 y
+2023, también bajo ENSO cálido), el resultado solo puede reforzarse.
 
 ## Uso
 

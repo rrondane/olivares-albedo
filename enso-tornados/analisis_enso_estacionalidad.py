@@ -90,8 +90,40 @@ ev = ev.merge(oni[["season", "year", "anom_c", "oni"]],
 
 era = ev[ev["year"] >= 1950].copy()
 assert not era["oni"].isna().any(), "event without ONI value"
+era["provisional"] = False
 print(f"{len(ev)} dated events in the database; {len(era)} in the ONI era "
       f"(1950-{era['year'].max()})")
+
+# ------------------------------------------- provisional events (2026, ...)
+# Events reported in the press but not yet curated into the Bastias et al.
+# database. Their concurrent ONI season may not be published yet: those get
+# the LATEST available ONI anomaly, and a phase from the +-0.5 threshold
+# alone (the >=5-season episode rule cannot be applied to an ongoing event).
+PROV = os.path.join(HERE, "data", "eventos_2026_provisional.csv")
+era_plus = era
+if os.path.exists(PROV):
+    pr = pd.read_csv(PROV)
+    pr["fecha"] = pd.to_datetime(pr["date"])
+    pr["year"] = pr["fecha"].dt.year
+    pr["month"] = pr["fecha"].dt.month
+    pr["doy"] = pr["fecha"].dt.dayofyear
+    pr["ylen"] = np.where(pr["fecha"].dt.is_leap_year, 366, 365)
+    pr["theta"] = 2 * np.pi * (pr["doy"] - 0.5) / pr["ylen"]
+    pr["season"] = pr["month"].map(lambda m: SEASON_OF_MONTH[m - 1])
+    pr = pr.merge(oni[["season", "year", "anom_c", "oni"]],
+                  on=["season", "year"], how="left")
+    last = oni.dropna(subset=["anom_c"]).iloc[-1]
+    miss = pr["anom_c"].isna()
+    pr.loc[miss, "anom_c"] = last["anom_c"]
+    phase = ("el_nino" if last["anom_c"] >= 0.5
+             else "la_nina" if last["anom_c"] <= -0.5 else "neutral")
+    pr.loc[miss, "oni"] = phase
+    pr["provisional"] = True
+    print(f"{len(pr)} provisional events; {int(miss.sum())} take the latest "
+          f"available ONI ({last['season']} {int(last['year'])}: "
+          f"{last['anom_c']:+.2f} C, threshold-only phase)")
+    era_plus = pd.concat([era, pr[era.columns.intersection(pr.columns)]],
+                         ignore_index=True)
 
 # ---------------------------------------------------------------- circular
 def circ_mean_R(theta):
@@ -241,6 +273,15 @@ analyze(era[era["lat"] <= -33], "central-southern events (lat <= -33)", report)
 analyze(era_days[era_days["lat"] <= -33],
         "central-southern tornado days", report)
 
+if era_plus is not era:
+    plus_days = (era_plus.sort_values("fecha")
+                 .groupby("fecha", as_index=False)
+                 .agg({"theta": "first", "doy": "first", "anom_c": "first",
+                       "oni": "first", "lat": "min", "year": "first",
+                       "month": "first"}))
+    analyze(era_plus, "events + 2026 provisional (ENSO provisional)", report)
+    analyze(plus_days, "tornado days + 2026 provisional", report)
+
 # how often is each phase present at all? (base rate 1950-2023, all months)
 base = oni[(oni["year"] >= 1950) & (oni["year"] <= 2023)]
 share = base["oni"].value_counts(normalize=True)
@@ -289,6 +330,13 @@ for ph in ("la_nina", "neutral", "el_nino"):
     g = era[era["oni"] == ph]
     ax2.scatter(g["doy"], g["anom_c"], s=26, color=COL[ph],
                 edgecolor="white", linewidth=0.6, zorder=3)
+if era_plus is not era:
+    g = era_plus[era_plus["provisional"]]
+    ax2.scatter(g["doy"], g["anom_c"], s=34, marker="D", facecolor="none",
+                edgecolor=[COL[p] for p in g["oni"]], linewidth=1.3, zorder=4)
+    ax2.annotate("2026 (provisional)", xy=(g["doy"].max(), g["anom_c"].max()),
+                 xytext=(6, 6), textcoords="offset points", fontsize=8.5,
+                 color=COL["el_nino"])
 ax2.axvspan(135, 166, color="#c4442e", alpha=0.07, zorder=0)
 ax2.set_xticks([1, 60, 121, 182, 244, 305, 365])
 ax2.set_xticklabels(["1 ene", "1 mar", "1 may", "1 jul",
