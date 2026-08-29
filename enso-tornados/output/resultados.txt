@@ -2,79 +2,82 @@ Does warm ENSO (El Nino) change the seasonality of Chilean tornadoes?
 
 Data
 ----
-* Tornado/waterspout database of Bastias-Curivil et al. (2024),
+* Tornado/waterspout database of Bastias-Curivil et al.,
   "Tornadoes and Waterspouts in Chile / Tornados y Trombas en Chile"
-  (figshare, doi:10.6084/m9.figshare.25119566), 83 events 1554-2023.
-  Snapshot in data/tornados_trombas_chile_bastias2024.csv.
+  (figshare, doi:10.6084/m9.figshare.25119566). The snapshot in
+  data/tornados_trombas_chile_master_2026-08-06.csv is the Final_Table of
+  the authors' master workbook (2026-08-06), 116 events 1554-2026.
 * Oceanic Nino Index (ONI), CPC/NOAA (oni.ascii.txt), with the official
   episode definition (anomaly >= +-0.5 C for >= 5 consecutive overlapping
   3-month seasons). Snapshot in data/oni.csv (via github.com/ahuang11/ninodata).
+* data/eventos_2026_provisional.csv: press-reported events newer than the
+  master snapshot, pending curation. Never mixed into the headline result.
 
 
-=== all events 1950-2023: n=72  (El Nino 24, neutral 38, La Nina 10)
-    El Nino  n= 24  mean date 26-jun  R=0.792  Rayleigh p=0.0000
-    rest     n= 48  mean date 09-jun  R=0.616  Rayleigh p=0.0000
-    all      n= 72  mean date 16-jun  R=0.668  Rayleigh p=0.0000
-    d(mean date) El Nino - rest = +17.3 days   perm p = 0.155
-    d(concentration R)          = +0.176        perm p = 0.165
-    Watson U2                   = 0.138         perm p = 0.136
-    Spearman rho(ONI anom, |dev from mean date|) = -0.094   perm p = 0.430
-    core 15 May-15 Jun: El Nino 12/24 vs rest 14/48   Fisher p = 0.118
-    core May-Aug: El Nino 20/24 vs rest 37/48   Fisher p = 0.759
+=== all events with final ONI (1950-2025): n=94  (El Nino 26, neutral 55, La Nina 13)
+    El Nino  n= 26  mean date 24-jun  R=0.749  Rayleigh p=0.0000
+    rest     n= 68  mean date 20-jun  R=0.573  Rayleigh p=0.0000
+    all      n= 94  mean date 21-jun  R=0.621  Rayleigh p=0.0000
+    d(mean date) El Nino - rest = +4.2 days   perm p = 0.744
+    d(concentration R)          = +0.176        perm p = 0.136
+    Watson U2                   = 0.169         perm p = 0.071
+    Spearman rho(ONI anom, |dev from mean date|) = -0.241   perm p = 0.019
+    core 15 May-15 Jun: El Nino 12/26 vs rest 18/68   Fisher p = 0.085
+    core May-Aug: El Nino 21/26 vs rest 49/68   Fisher p = 0.441
 
-=== tornado days (unique dates): n=56  (El Nino 17, neutral 30, La Nina 9)
-    El Nino  n= 17  mean date 02-jul  R=0.805  Rayleigh p=0.0000
-    rest     n= 39  mean date 05-jun  R=0.590  Rayleigh p=0.0000
-    all      n= 56  mean date 15-jun  R=0.639  Rayleigh p=0.0000
-    d(mean date) El Nino - rest = +26.8 days   perm p = 0.083
-    d(concentration R)          = +0.215        perm p = 0.152
-    Watson U2                   = 0.103         perm p = 0.270
-    Spearman rho(ONI anom, |dev from mean date|) = -0.160   perm p = 0.239
-    core 15 May-15 Jun: El Nino 7/17 vs rest 11/39   Fisher p = 0.366
-    core May-Aug: El Nino 14/17 vs rest 29/39   Fisher p = 0.733
+=== tornado days (unique dates): n=73  (El Nino 18, neutral 43, La Nina 12)
+    El Nino  n= 18  mean date 28-jun  R=0.728  Rayleigh p=0.0000
+    rest     n= 55  mean date 16-jun  R=0.560  Rayleigh p=0.0000
+    all      n= 73  mean date 20-jun  R=0.599  Rayleigh p=0.0000
+    d(mean date) El Nino - rest = +11.7 days   perm p = 0.464
+    d(concentration R)          = +0.167        perm p = 0.244
+    Watson U2                   = 0.111         perm p = 0.231
+    Spearman rho(ONI anom, |dev from mean date|) = -0.275   perm p = 0.019
+    core 15 May-15 Jun: El Nino 7/18 vs rest 15/55   Fisher p = 0.385
+    core May-Aug: El Nino 14/18 vs rest 40/55   Fisher p = 0.766
 
-=== central-southern events (lat <= -33): n=66  (El Nino 24, neutral 33, La Nina 9)
-    El Nino  n= 24  mean date 26-jun  R=0.792  Rayleigh p=0.0000
-    rest     n= 42  mean date 11-jun  R=0.656  Rayleigh p=0.0000
-    all      n= 66  mean date 17-jun  R=0.699  Rayleigh p=0.0000
-    d(mean date) El Nino - rest = +15.4 days   perm p = 0.184
-    d(concentration R)          = +0.137        perm p = 0.268
-    Watson U2                   = 0.127         perm p = 0.170
-    Spearman rho(ONI anom, |dev from mean date|) = -0.048   perm p = 0.702
-    core 15 May-15 Jun: El Nino 12/24 vs rest 12/42   Fisher p = 0.112
-    core May-Aug: El Nino 20/24 vs rest 33/42   Fisher p = 0.755
+=== central-southern events (lat <= -33): n=89  (El Nino 26, neutral 51, La Nina 12)
+    El Nino  n= 26  mean date 24-jun  R=0.749  Rayleigh p=0.0000
+    rest     n= 63  mean date 22-jun  R=0.605  Rayleigh p=0.0000
+    all      n= 89  mean date 22-jun  R=0.647  Rayleigh p=0.0000
+    d(mean date) El Nino - rest = +2.7 days   perm p = 0.825
+    d(concentration R)          = +0.145        perm p = 0.212
+    Watson U2                   = 0.151         perm p = 0.104
+    Spearman rho(ONI anom, |dev from mean date|) = -0.217   perm p = 0.041
+    core 15 May-15 Jun: El Nino 12/26 vs rest 17/63   Fisher p = 0.089
+    core May-Aug: El Nino 21/26 vs rest 46/63   Fisher p = 0.591
 
-=== central-southern tornado days: n=51  (El Nino 17, neutral 26, La Nina 8)
-    El Nino  n= 17  mean date 02-jul  R=0.805  Rayleigh p=0.0000
-    rest     n= 34  mean date 08-jun  R=0.642  Rayleigh p=0.0000
-    all      n= 51  mean date 17-jun  R=0.683  Rayleigh p=0.0000
-    d(mean date) El Nino - rest = +23.8 days   perm p = 0.091
-    d(concentration R)          = +0.163        perm p = 0.253
-    Watson U2                   = 0.081         perm p = 0.423
-    Spearman rho(ONI anom, |dev from mean date|) = -0.098   perm p = 0.498
-    core 15 May-15 Jun: El Nino 7/17 vs rest 9/34   Fisher p = 0.345
-    core May-Aug: El Nino 14/17 vs rest 26/34   Fisher p = 0.731
+=== central-southern tornado days: n=69  (El Nino 18, neutral 40, La Nina 11)
+    El Nino  n= 18  mean date 28-jun  R=0.728  Rayleigh p=0.0000
+    rest     n= 51  mean date 18-jun  R=0.605  Rayleigh p=0.0000
+    all      n= 69  mean date 21-jun  R=0.635  Rayleigh p=0.0000
+    d(mean date) El Nino - rest = +9.6 days   perm p = 0.531
+    d(concentration R)          = +0.123        perm p = 0.373
+    Watson U2                   = 0.090         perm p = 0.352
+    Spearman rho(ONI anom, |dev from mean date|) = -0.235   perm p = 0.050
+    core 15 May-15 Jun: El Nino 7/18 vs rest 14/51   Fisher p = 0.385
+    core May-Aug: El Nino 14/18 vs rest 38/51   Fisher p = 1.000
 
-=== events + 2026 provisional (ENSO provisional): n=79  (El Nino 31, neutral 38, La Nina 10)
-    El Nino  n= 31  mean date 08-jul  R=0.783  Rayleigh p=0.0000
-    rest     n= 48  mean date 09-jun  R=0.616  Rayleigh p=0.0000
-    all      n= 79  mean date 22-jun  R=0.661  Rayleigh p=0.0000
-    d(mean date) El Nino - rest = +28.8 days   perm p = 0.013
-    d(concentration R)          = +0.167        perm p = 0.145
-    Watson U2                   = 0.101         perm p = 0.288
-    Spearman rho(ONI anom, |dev from mean date|) = +0.020   perm p = 0.858
-    core 15 May-15 Jun: El Nino 12/31 vs rest 14/48   Fisher p = 0.464
-    core May-Aug: El Nino 27/31 vs rest 37/48   Fisher p = 0.381
+=== events + 2026 provisional (ENSO provisional): n=102  (El Nino 34, neutral 55, La Nina 13)
+    El Nino  n= 34  mean date 05-jul  R=0.753  Rayleigh p=0.0000
+    rest     n= 68  mean date 20-jun  R=0.573  Rayleigh p=0.0000
+    all      n=102  mean date 26-jun  R=0.628  Rayleigh p=0.0000
+    d(mean date) El Nino - rest = +15.0 days   perm p = 0.201
+    d(concentration R)          = +0.180        perm p = 0.083
+    Watson U2                   = 0.119         perm p = 0.195
+    Spearman rho(ONI anom, |dev from mean date|) = -0.188   perm p = 0.058
+    core 15 May-15 Jun: El Nino 12/34 vs rest 18/68   Fisher p = 0.367
+    core May-Aug: El Nino 29/34 vs rest 49/68   Fisher p = 0.215
 
-=== tornado days + 2026 provisional: n=60  (El Nino 21, neutral 30, La Nina 9)
-    El Nino  n= 21  mean date 09-jul  R=0.810  Rayleigh p=0.0000
-    rest     n= 39  mean date 05-jun  R=0.590  Rayleigh p=0.0000
-    all      n= 60  mean date 19-jun  R=0.638  Rayleigh p=0.0000
-    d(mean date) El Nino - rest = +34.5 days   perm p = 0.017
-    d(concentration R)          = +0.220        perm p = 0.106
-    Watson U2                   = 0.113         perm p = 0.219
-    Spearman rho(ONI anom, |dev from mean date|) = -0.076   perm p = 0.567
-    core 15 May-15 Jun: El Nino 7/21 vs rest 11/39   Fisher p = 0.771
-    core May-Aug: El Nino 18/21 vs rest 29/39   Fisher p = 0.512
+=== tornado days + 2026 provisional: n=79  (El Nino 24, neutral 43, La Nina 12)
+    El Nino  n= 24  mean date 07-jul  R=0.761  Rayleigh p=0.0000
+    rest     n= 55  mean date 16-jun  R=0.560  Rayleigh p=0.0000
+    all      n= 79  mean date 24-jun  R=0.612  Rayleigh p=0.0000
+    d(mean date) El Nino - rest = +20.1 days   perm p = 0.154
+    d(concentration R)          = +0.201        perm p = 0.109
+    Watson U2                   = 0.138         perm p = 0.134
+    Spearman rho(ONI anom, |dev from mean date|) = -0.238   perm p = 0.035
+    core 15 May-15 Jun: El Nino 7/24 vs rest 15/55   Fisher p = 1.000
+    core May-Aug: El Nino 20/24 vs rest 40/55   Fisher p = 0.398
 
-Base rate check: 26.1% of months 1950-2023 are El Nino episodes -> expected 18.8 of 72 events, observed 24 (exact binomial two-sided p = 0.179). Events are not independent (outbreaks), so this p is anti-conservative; it concerns frequency, not seasonality.
+Base rate check: 25.8% of months 1952-2025 are El Nino episodes -> expected 24.2 of 94 events, observed 26 (exact binomial two-sided p = 0.724). Events are not independent (outbreaks), so this p is anti-conservative; it concerns frequency, not seasonality.

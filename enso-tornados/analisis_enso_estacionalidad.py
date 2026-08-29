@@ -2,20 +2,26 @@
 
 Data
 ----
-* Tornado/waterspout database of Bastias-Curivil et al. (2024),
+* Tornado/waterspout database of Bastias-Curivil et al.,
   "Tornadoes and Waterspouts in Chile / Tornados y Trombas en Chile"
-  (figshare, doi:10.6084/m9.figshare.25119566), 83 events 1554-2023.
-  Snapshot in data/tornados_trombas_chile_bastias2024.csv.
+  (figshare, doi:10.6084/m9.figshare.25119566). The snapshot in
+  data/tornados_trombas_chile_master_2026-08-06.csv is the Final_Table of
+  the authors' master workbook (2026-08-06), 116 events 1554-2026.
 * Oceanic Nino Index (ONI), CPC/NOAA (oni.ascii.txt), with the official
   episode definition (anomaly >= +-0.5 C for >= 5 consecutive overlapping
   3-month seasons). Snapshot in data/oni.csv (via github.com/ahuang11/ninodata).
+* data/eventos_2026_provisional.csv: press-reported events newer than the
+  master snapshot, pending curation. Never mixed into the headline result.
 
 Method
 ------
 Each event >= 1950 (ONI era) is assigned the ONI 3-month season centered on
 its calendar month (May -> AMJ, etc.): the concurrent ONI anomaly and the
-episode phase (el_nino / neutral / la_nina). Seasonality is treated as a
-circular variable (day of year -> angle). For "warm ENSO" vs "rest" we test:
+episode phase (el_nino / neutral / la_nina). Events whose season is not yet
+published (the ongoing year) take the LATEST available anomaly with a
+threshold-only phase, are flagged provisional, and enter only the
+"+ provisional" variants. Seasonality is treated as a circular variable
+(day of year -> angle). For "warm ENSO" vs "rest" we test:
 
 * difference in circular mean date        (permutation test)
 * difference in concentration R           (permutation test)
@@ -45,85 +51,74 @@ rng = np.random.default_rng(20240531)   # Talcahuano tornado date as seed
 N_PERM = 20000
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-DB = os.path.join(HERE, "data", "tornados_trombas_chile_bastias2024.csv")
+DB = os.path.join(HERE, "data", "tornados_trombas_chile_master_2026-08-06.csv")
 ONI = os.path.join(HERE, "data", "oni.csv")
+PROV = os.path.join(HERE, "data", "eventos_2026_provisional.csv")
 OUT = os.path.join(HERE, "output")
 os.makedirs(OUT, exist_ok=True)
 
 SEASON_OF_MONTH = ["DJF", "JFM", "FMA", "MAM", "AMJ", "MJJ",
                    "JJA", "JAS", "ASO", "SON", "OND", "NDJ"]
 
+
+def add_time_columns(df):
+    df["year"] = df["fecha"].dt.year
+    df["month"] = df["fecha"].dt.month
+    df["doy"] = df["fecha"].dt.dayofyear
+    ylen = np.where(df["fecha"].dt.is_leap_year, 366, 365)
+    df["theta"] = 2 * np.pi * (df["doy"] - 0.5) / ylen
+    df["season"] = df["month"].map(lambda m: SEASON_OF_MONTH[m - 1])
+    return df
+
+
 # ---------------------------------------------------------------- load data
 ev = pd.read_csv(DB)
-ev.columns = [c.strip() for c in ev.columns]
 ev["fecha"] = pd.to_datetime(ev["Date (Gregorian Calendar)"], errors="coerce")
+ev["lat"] = pd.to_numeric(ev["Latitude"], errors="coerce")
+ev = add_time_columns(ev.dropna(subset=["fecha"]).copy())
+ev["provisional"] = False
 
-
-def _decimal_comma(x):
-    """Coordinates come as '-38,70795725' (decimal comma)."""
-    if pd.isna(x):
-        return np.nan
-    parts = str(x).strip().split(",")
-    try:
-        return float(parts[0] + "." + "".join(parts[1:])) if len(parts) > 1 \
-            else float(parts[0])
-    except ValueError:
-        return np.nan
-
-
-ev["lat"] = ev["Latitude"].map(_decimal_comma)
-# event 65 (Lago Villarrica 2021) has the longitude typed in the latitude
-# column (-72.18); use the lake's latitude so the lat<=-33 filter keeps it
-ev.loc[(ev["N°"] == 65) & (ev["lat"] < -60), "lat"] = -39.25
-
-ev = ev.dropna(subset=["fecha"]).copy()
-ev["year"] = ev["fecha"].dt.year
-ev["month"] = ev["fecha"].dt.month
-ev["doy"] = ev["fecha"].dt.dayofyear
-ev["ylen"] = np.where(ev["fecha"].dt.is_leap_year, 366, 365)
-ev["theta"] = 2 * np.pi * (ev["doy"] - 0.5) / ev["ylen"]
+prov = pd.DataFrame()
+if os.path.exists(PROV):
+    prov = pd.read_csv(PROV)
+    prov["fecha"] = pd.to_datetime(prov["date"])
+    prov = add_time_columns(prov)
+    prov["provisional"] = True
 
 oni = pd.read_csv(ONI)
-ev["season"] = ev["month"].map(lambda m: SEASON_OF_MONTH[m - 1])
-ev = ev.merge(oni[["season", "year", "anom_c", "oni"]],
-              on=["season", "year"], how="left")
+merge_cols = ["season", "year", "anom_c", "oni"]
+ev = ev.merge(oni[merge_cols], on=["season", "year"], how="left")
+if len(prov):
+    prov = prov.merge(oni[merge_cols], on=["season", "year"], how="left")
 
-era = ev[ev["year"] >= 1950].copy()
-assert not era["oni"].isna().any(), "event without ONI value"
-era["provisional"] = False
-print(f"{len(ev)} dated events in the database; {len(era)} in the ONI era "
-      f"(1950-{era['year'].max()})")
+# events in seasons not yet published take the latest final ONI value with a
+# threshold-only phase (the >=5-season episode rule needs the full run)
+last = oni.dropna(subset=["anom_c"]).iloc[-1]
+last_phase = ("el_nino" if last["anom_c"] >= 0.5
+              else "la_nina" if last["anom_c"] <= -0.5 else "neutral")
+n_pending = 0
+for df in (ev, prov):
+    if not len(df):
+        continue
+    miss = df["anom_c"].isna() & (df["year"] >= 1950)
+    n_pending += int(miss.sum())
+    df.loc[miss, "anom_c"] = last["anom_c"]
+    df.loc[miss, "oni"] = last_phase
+    df.loc[miss, "provisional"] = True
 
-# ------------------------------------------- provisional events (2026, ...)
-# Events reported in the press but not yet curated into the Bastias et al.
-# database. Their concurrent ONI season may not be published yet: those get
-# the LATEST available ONI anomaly, and a phase from the +-0.5 threshold
-# alone (the >=5-season episode rule cannot be applied to an ongoing event).
-PROV = os.path.join(HERE, "data", "eventos_2026_provisional.csv")
-era_plus = era
-if os.path.exists(PROV):
-    pr = pd.read_csv(PROV)
-    pr["fecha"] = pd.to_datetime(pr["date"])
-    pr["year"] = pr["fecha"].dt.year
-    pr["month"] = pr["fecha"].dt.month
-    pr["doy"] = pr["fecha"].dt.dayofyear
-    pr["ylen"] = np.where(pr["fecha"].dt.is_leap_year, 366, 365)
-    pr["theta"] = 2 * np.pi * (pr["doy"] - 0.5) / pr["ylen"]
-    pr["season"] = pr["month"].map(lambda m: SEASON_OF_MONTH[m - 1])
-    pr = pr.merge(oni[["season", "year", "anom_c", "oni"]],
-                  on=["season", "year"], how="left")
-    last = oni.dropna(subset=["anom_c"]).iloc[-1]
-    miss = pr["anom_c"].isna()
-    pr.loc[miss, "anom_c"] = last["anom_c"]
-    phase = ("el_nino" if last["anom_c"] >= 0.5
-             else "la_nina" if last["anom_c"] <= -0.5 else "neutral")
-    pr.loc[miss, "oni"] = phase
-    pr["provisional"] = True
-    print(f"{len(pr)} provisional events; {int(miss.sum())} take the latest "
-          f"available ONI ({last['season']} {int(last['year'])}: "
-          f"{last['anom_c']:+.2f} C, threshold-only phase)")
-    era_plus = pd.concat([era, pr[era.columns.intersection(pr.columns)]],
-                         ignore_index=True)
+era_all = ev[ev["year"] >= 1950].copy()
+era = era_all[~era_all["provisional"]]
+print(f"{len(ev)} dated events in the database, {len(era_all)} in the ONI "
+      f"era; headline sample {len(era)} (final ONI, "
+      f"{era['year'].min()}-{era['year'].max()})")
+print(f"{n_pending} events with unpublished ONI season take "
+      f"{last['season']} {int(last['year'])} = {last['anom_c']:+.2f} C "
+      f"({last_phase}, provisional); +{len(prov)} press-reported events")
+
+cols = ["fecha", "lat", "theta", "doy", "anom_c", "oni", "year", "month",
+        "provisional"]
+era_plus = pd.concat([era_all[cols], prov[cols]] if len(prov)
+                     else [era_all[cols]], ignore_index=True)
 
 # ---------------------------------------------------------------- circular
 def circ_mean_R(theta):
@@ -135,9 +130,8 @@ def rayleigh_p(theta):
     """Zar (1999) approximation for the Rayleigh test."""
     n = len(theta)
     _, R = circ_mean_R(theta)
-    z = n * R * R
     return math.exp(math.sqrt(1 + 4 * n + 4 * (n * n - (n * R) ** 2))
-                    - (1 + 2 * n)), R, z
+                    - (1 + 2 * n)), R
 
 
 def ang_to_date(theta):
@@ -155,12 +149,9 @@ def watson_u2(t1, t2):
     """Watson's two-sample U^2 (Zar 1999, eq. 27.17)."""
     n1, n2 = len(t1), len(t2)
     n = n1 + n2
-    allv = np.concatenate([t1, t2])
-    order = np.argsort(allv, kind="mergesort")
+    order = np.argsort(np.concatenate([t1, t2]), kind="mergesort")
     labels = np.concatenate([np.ones(n1), np.zeros(n2)])[order]
-    c1 = np.cumsum(labels) / n1
-    c2 = np.cumsum(1 - labels) / n2
-    d = c1 - c2
+    d = np.cumsum(labels) / n1 - np.cumsum(1 - labels) / n2
     return (n1 * n2 / n**2) * (np.sum(d * d) - np.sum(d) ** 2 / n)
 
 
@@ -185,6 +176,20 @@ def spearman(x, y):
     return float(np.mean(rx * ry))
 
 
+def fisher_exact(a, b, c, d):
+    """Two-sided Fisher exact test (sum of tables as or less probable)."""
+    n, r1, c1 = a + b + c + d, a + b, a + c
+
+    def hyper(x):
+        return (math.comb(r1, x) * math.comb(n - r1, c1 - x)
+                / math.comb(n, c1))
+
+    p_obs = hyper(a)
+    return sum(hyper(x) for x in range(max(0, c1 - (n - r1)),
+                                       min(r1, c1) + 1)
+               if hyper(x) <= p_obs * (1 + 1e-9))
+
+
 # ---------------------------------------------------------------- analysis
 def analyze(df, name, report):
     w = df[df["oni"] == "el_nino"]
@@ -198,7 +203,7 @@ def analyze(df, name, report):
         return
 
     for lbl, g in (("El Nino ", w), ("rest    ", r), ("all     ", df)):
-        p, R, _ = rayleigh_p(g["theta"].to_numpy())
+        p, R = rayleigh_p(g["theta"].to_numpy())
         mu, _ = circ_mean_R(g["theta"].to_numpy())
         lines.append(f"    {lbl} n={len(g):3d}  mean date {ang_to_date(mu)}  "
                      f"R={R:.3f}  Rayleigh p={p:.4f}")
@@ -236,63 +241,42 @@ def analyze(df, name, report):
     # share of events in the core season (15 May - 15 Jun) and in May-Aug
     for lo, hi, lbl in ((135, 166, "15 May-15 Jun"), (121, 243, "May-Aug")):
         a = int(sum(w["doy"].between(lo, hi)))
-        b = len(w) - a
         c = int(sum(r["doy"].between(lo, hi)))
-        d = len(r) - c
-        pf = fisher_exact(a, b, c, d)
+        pf = fisher_exact(a, len(w) - a, c, len(r) - c)
         lines.append(f"    core {lbl}: El Nino {a}/{len(w)} vs rest "
                      f"{c}/{len(r)}   Fisher p = {pf:.3f}")
     report.extend(lines)
 
 
-def fisher_exact(a, b, c, d):
-    """Two-sided Fisher exact test (sum of tables as or less probable)."""
-    n, r1, c1 = a + b + c + d, a + b, a + c
-
-    def hyper(x):
-        return (math.comb(r1, x) * math.comb(n - r1, c1 - x)
-                / math.comb(n, c1))
-
-    p_obs = hyper(a)
-    return sum(hyper(x) for x in range(max(0, c1 - (n - r1)),
-                                       min(r1, c1) + 1)
-               if hyper(x) <= p_obs * (1 + 1e-9))
-
-
-report = []
-
-# events, tornado days, and sensitivity subsets
-era_days = (era.sort_values("fecha")
+def by_days(df):
+    return (df.sort_values("fecha")
             .groupby("fecha", as_index=False)
             .agg({"theta": "first", "doy": "first", "anom_c": "first",
                   "oni": "first", "lat": "min", "year": "first",
-                  "month": "first"}))
-analyze(era, "all events 1950-2023", report)
-analyze(era_days, "tornado days (unique dates)", report)
+                  "month": "first", "provisional": "any"}))
+
+
+report = []
+analyze(era, f"all events with final ONI (1950-{era['year'].max()})", report)
+analyze(by_days(era), "tornado days (unique dates)", report)
 analyze(era[era["lat"] <= -33], "central-southern events (lat <= -33)", report)
-analyze(era_days[era_days["lat"] <= -33],
+analyze(by_days(era[era["lat"] <= -33]),
         "central-southern tornado days", report)
-
-if era_plus is not era:
-    plus_days = (era_plus.sort_values("fecha")
-                 .groupby("fecha", as_index=False)
-                 .agg({"theta": "first", "doy": "first", "anom_c": "first",
-                       "oni": "first", "lat": "min", "year": "first",
-                       "month": "first"}))
+if era_plus["provisional"].any():
     analyze(era_plus, "events + 2026 provisional (ENSO provisional)", report)
-    analyze(plus_days, "tornado days + 2026 provisional", report)
+    analyze(by_days(era_plus), "tornado days + 2026 provisional", report)
 
-# how often is each phase present at all? (base rate 1950-2023, all months)
-base = oni[(oni["year"] >= 1950) & (oni["year"] <= 2023)]
+# how often is each phase present at all? (base rate over the headline era)
+y0, y1 = int(era["year"].min()), int(era["year"].max())
+base = oni[(oni["year"] >= y0) & (oni["year"] <= y1)]
 share = base["oni"].value_counts(normalize=True)
 nw = int(sum(era["oni"] == "el_nino"))
 p0 = float(share.get("el_nino", 0))
-exp = p0 * len(era)
 n = len(era)
 pmf = [math.comb(n, k) * p0**k * (1 - p0) ** (n - k) for k in range(n + 1)]
 p_binom = sum(p for k, p in enumerate(pmf) if p <= pmf[nw] * (1 + 1e-9))
-report.append(f"\nBase rate check: {p0:.1%} of months 1950-2023 are "
-              f"El Nino episodes -> expected {exp:.1f} of {n} events, "
+report.append(f"\nBase rate check: {p0:.1%} of months {y0}-{y1} are "
+              f"El Nino episodes -> expected {p0 * n:.1f} of {n} events, "
               f"observed {nw} (exact binomial two-sided p = {p_binom:.3f}). "
               "Events are not independent (outbreaks), so this p is "
               "anti-conservative; it concerns frequency, not seasonality.")
@@ -319,7 +303,8 @@ for k, ph in enumerate(("la_nina", "neutral", "el_nino")):
 ax1.set_xticks(months)
 ax1.set_xticklabels(figstyle.MESES)
 ax1.set_ylabel("Número de eventos")
-ax1.set_title("Eventos por mes y fase ENSO (1950–2023)", loc="left")
+ax1.set_title(f"Eventos por mes y fase ENSO (1950–{era['year'].max()})",
+              loc="left")
 ax1.legend(frameon=False)
 ax1.spines[["top", "right"]].set_visible(False)
 ax1.yaxis.set_major_locator(plt.MaxNLocator(integer=True))
@@ -330,8 +315,8 @@ for ph in ("la_nina", "neutral", "el_nino"):
     g = era[era["oni"] == ph]
     ax2.scatter(g["doy"], g["anom_c"], s=26, color=COL[ph],
                 edgecolor="white", linewidth=0.6, zorder=3)
-if era_plus is not era:
-    g = era_plus[era_plus["provisional"]]
+g = era_plus[era_plus["provisional"]]
+if len(g):
     ax2.scatter(g["doy"], g["anom_c"], s=34, marker="D", facecolor="none",
                 edgecolor=[COL[p] for p in g["oni"]], linewidth=1.3, zorder=4)
     ax2.annotate("2026 (provisional)", xy=(g["doy"].max(), g["anom_c"].max()),
